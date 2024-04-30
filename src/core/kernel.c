@@ -12,6 +12,7 @@
 extern uint32_t video_buffer;
 extern int main();
 
+
 void __attribute__((section(".text.main"), noreturn)) _init(void)
 {
     debugInit();
@@ -28,6 +29,16 @@ void __attribute__((section(".text.main"), noreturn)) _init(void)
     vgaInit(video_buffer);
 
     __asm__("finit");
+
+	uint32_t *eax, *ebx, *ecx, *edx;
+    asm volatile("cpuid"
+	             : "=a"(*eax), "=b"(*ebx), "=c"(*ecx), "=d"(*edx)
+	             : "a"(1));
+	if ((*edx >> 25) & 1) {
+		char fxsave_region[512] __attribute__((aligned(16)));
+		asm volatile(" fxsave %0 " ::"m"(fxsave_region));
+		uint32_t sse_version = (*ecx >> 25) & 0x7;
+    }
 
     DEBUG_PRINT("Kernel initialized!");
 
